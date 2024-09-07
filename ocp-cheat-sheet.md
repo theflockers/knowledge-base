@@ -107,3 +107,112 @@ add *view* role to group:
 ```
 $ oc policy add-role-to-group view <group>
 ```
+
+## tls security
+
+### external traffic
+creating a secret with TLS certs:
+```
+$ oc create secret tls <name> --cert <path-to-cert> --key <path-to-key>
+```
+insecure service exposure:
+```
+$ oc expose svc <pod name> --hostname <hostname>
+```
+exposing a service with the edge termination (encryption only in the edge)
+```
+$ oc create route edge <name> --service <svc> --hostname <hostname>
+```
+exposing aservice with the passthrough termination (encryption in the pod level)
+```
+$ oc create route passthrough <name> --service <svc> --port 8443 --hostname <hostname>
+```
+### internal traffic
+create certs and secret using the `service-ca` controller:
+```
+$ oc annotate service <svc> service.beta.openshift.io/serving-cert-secret-name=<svc>
+```
+
+saving CA in a configmap
+```
+$ oc annotate configmap <existing configmap> service.beta.openshift.io/inject-cabundle=true
+```
+_both certs secret and CA configmap can be used in deployments or Pod declarations_
+
+to rotate secrets using the `service-ca` controller:
+```
+$ oc delete secret <certificate secret created by service-ca>
+```
+to rotate the CA
+```
+$ oc delete secret/signing-key -n openshift-service-ca
+```
+
+## network policies
+
+creating a deny all policy - all pods unreacheable
+```
+$ cat > deny-all.yaml <<EOF
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: deny-all
+spec:
+  podSelector:{}
+  ingress: []
+EOF
+
+$ oc create -f deny-all.yaml
+```
+allowing specific traffic to the pod labeled `ingress-allowed: true` from pods/namespaces labeled `network: internal-network` and
+from the pod labeled `allowed-specific: true`
+to the `tcp` port `80`
+```
+$ cat > allow-specific.yaml <<EOF
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: allow-specific
+spec:
+  podSelector:
+    matchLabels:
+      ingress-allowed: true
+  ingress:
+    - from
+      - namespaceSelector:
+          matchLabels:
+            network: internal-network
+          podSelector:
+            matchLabels:
+              allowed-specific: true
+      ports:
+      - port: 80
+        protocol: TCP
+EOF
+
+$ oc create -f allow-specific.yaml
+```
+
+list network policies
+```
+$ oc get networkpolicies -n <namespace>
+```
+
+allow traffic from openshift ingress policy group
+```
+$ cat > allow-from-ingress.yaml <<EOF
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: allow-from-ingress
+spec:
+  podSelector: {}
+  ingress:
+    - from:
+      - namespaceSelector:
+          matchLabels:
+            network.openshift.io/policy-group: ingress
+EOF
+
+$ oc create -f allow-from-ingress.yaml
+```
