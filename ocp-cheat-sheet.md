@@ -1,7 +1,22 @@
 
 # Openshift cheat sheet
+Openshift commands for day to day usage
+# Index
+- [Templates](#templates)
+- [Helm charts](#helm-charts)
+- [Authentication](#authentication)
+- [Role management](#role-management)
+- [TLS security](#tls-security)
+	- [external traffic](#external-traffic)
+	- [internal traffic](#internal-traffic)
+- [Network Policies](#network-policies)
+- [Load Balancers](#load-balancers)
+
+
+
 
 ## templates
+
 To process a template
 ```
 $ oc process --parameters <template>
@@ -215,4 +230,20 @@ spec:
 EOF
 
 $ oc create -f allow-from-ingress.yaml
+```
+
+## load balancers
+
+create a service named `myservice`of type `LoadBalancer` listening in the port `80` and targeting the Pod port `8080`
+using the `dry-run='client'` option, so it can be customized later with proper labels:
+
+```
+$ oc create service loadbalancer myservice --tcp=80:8080 --dry-run='client' -o yaml > myservice.yaml
+_edit the file_
+$ oc create -f myservice.yaml
+```
+
+expose a existing service using the `LoadBalancer` type
+```
+$ oc expose <pod/deployment name> --name=<desired service name> --type=LoadBalancer
 ```
