@@ -11,9 +11,9 @@ Openshift commands for day to day usage
 	- [internal traffic](#internal-traffic)
 - [Network Policies](#network-policies)
 - [Load Balancers](#load-balancers)
-
-
-
+- [Quota and Resources](#quota-and-resources)
+- [Limit Ranges](#limit-ranges)
+- [Operators](#operators)
 
 ## templates
 
@@ -33,7 +33,10 @@ processing a template with parameters from a file
 ```
 $ oc process <template> --param-file=<path to param file>
 ```
-
+creating a bootstrap template
+```
+$ oc adm create-bootstrap-project-template -o yaml >my-template.yaml
+```
 ## helm charts
 
 to list repos
@@ -246,4 +249,100 @@ $ oc create -f myservice.yaml
 expose a existing service using the `LoadBalancer` type
 ```
 $ oc expose <pod/deployment name> --name=<desired service name> --type=LoadBalancer
+```
+
+## quota and resources
+set requests cpu quota to 1 for a pod
+```
+$ oc set resources deployment <name> --requests=cpu=1
+```
+scaling deployment
+```
+$ oc scale deployment <name> --replicas=<desired number of replicas>
+```
+getting events for the current namespace sorted by creation time
+```
+$ oc get event --sort-by .metadata.creationTimeStamp
+```
+
+to check system resource usage
+```
+$ oc adm top node
+```
+too check the node resources
+```
+$ oc describe node/master01
+```
+
+creating a new quota object with hard requests.cpu=2
+```
+$ oc create quota <name> --hard=requests.cpu=2
+```
+## limit ranges
+creating a LimitRange
+```
+$ cat > limit-range.yaml <<EOF
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: <limit range name>
+  namespace: <namespace>
+spec:
+  limits:
+  - min:
+      memory: 128Mi
+    defaultRequests:
+      memory: 256Mi
+    default:
+      memory: 512Mi
+    max:
+      memory: 1Gi
+    type: Container
+EOF
+
+$ oc create -f limit-range.yaml
+```
+describing a limit range
+```
+$ oc describe limitrange <name>
+```
+
+## operators
+getting the package manifests list
+```
+$ oc get packagemanifests
+```
+describing a package manifest
+```
+$ oc describe packagemanifest <name>
+```
+creating a subscription:
+```
+$ cat >subscription.yaml <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: subscription
+metadata:
+  name: <operator-name>
+  metadata: <operator namespace to run>
+spec:
+  channel: "stable"
+  installPlanApproval: Manual
+  name: <operator name>
+  source: <package manifest catalog source name>
+  sourceNamespace: openshift-marketplace
+
+EOF
+$ oc create -f subscription.yaml
+```
+getting the operator installplan:
+```
+$ oc get installplan -n <operator install namespace> -o jsonpath='{.spec}{"\n"}'
+```
+approve manually the installplan:
+```
+$ oc patch installplan --type merge -p '{"spec": {"approved": true}}' -n <operator install namespace>
+```
+checking the operator install progress
+```
+$ oc describe operator <name>
 ```
