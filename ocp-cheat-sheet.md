@@ -1,7 +1,8 @@
-
 # Openshift cheat sheet
-Openshift commands for day to day usage
-# Index
+
+Openshift commands for day to day use
+
+# Table of Contents
 - [Templates](#templates)
 - [Helm charts](#helm-charts)
 - [Authentication](#authentication)
@@ -16,7 +17,10 @@ Openshift commands for day to day usage
 - [Operators](#operators)
 - [Cluster upgrades](#cluster-upgrades)
 - [Deprecated APIs](#deprecated-apis)
-## templates
+
+## content
+
+### templates
 
 To process a template
 ```
@@ -38,7 +42,7 @@ creating a bootstrap template
 ```
 $ oc adm create-bootstrap-project-template -o yaml >my-template.yaml
 ```
-## helm charts
+### helm charts
 
 to list repos
 ```
@@ -68,7 +72,7 @@ to list installed apps
 ```
 helm list
 ```
-## authentication
+### authentication
 Adding htpasswd auth
 
 creating htpasswd secret
@@ -96,7 +100,7 @@ watching the authentication pods
 ```
 $ watch "oc get pod -n openshift-authentication"
 ```
-## role management
+### role management
 to add a cluster role to a user or group:
 ```
 $ oc adm policy add-cluster-role-to-<user|group> <role> <user|group>
@@ -127,9 +131,9 @@ add *view* role to group:
 $ oc policy add-role-to-group view <group>
 ```
 
-## tls security
+### tls security
 
-### external traffic
+#### external traffic
 creating a secret with TLS certs:
 ```
 $ oc create secret tls <name> --cert <path-to-cert> --key <path-to-key>
@@ -146,7 +150,7 @@ exposing aservice with the passthrough termination (encryption in the pod level)
 ```
 $ oc create route passthrough <name> --service <svc> --port 8443 --hostname <hostname>
 ```
-### internal traffic
+#### internal traffic
 create certs and secret using the `service-ca` controller:
 ```
 $ oc annotate service <svc> service.beta.openshift.io/serving-cert-secret-name=<svc>
@@ -167,7 +171,7 @@ to rotate the CA
 $ oc delete secret/signing-key -n openshift-service-ca
 ```
 
-## network policies
+### network policies
 
 creating a deny all policy - all pods unreacheable
 ```
@@ -236,7 +240,7 @@ EOF
 $ oc create -f allow-from-ingress.yaml
 ```
 
-## load balancers
+### load balancers
 
 create a service named `myservice`of type `LoadBalancer` listening in the port `80` and targeting the Pod port `8080`
 using the `dry-run='client'` option, so it can be customized later with proper labels:
@@ -252,7 +256,7 @@ expose a existing service using the `LoadBalancer` type
 $ oc expose <pod/deployment name> --name=<desired service name> --type=LoadBalancer
 ```
 
-## quota and resources
+### quota and resources
 set requests cpu quota to 1 for a pod
 ```
 $ oc set resources deployment <name> --requests=cpu=1
@@ -279,7 +283,7 @@ creating a new quota object with hard requests.cpu=2
 ```
 $ oc create quota <name> --hard=requests.cpu=2
 ```
-## limit ranges
+### limit ranges
 creating a LimitRange
 ```
 $ cat > limit-range.yaml <<EOF
@@ -308,7 +312,7 @@ describing a limit range
 $ oc describe limitrange <name>
 ```
 
-## operators
+### operators
 getting the package manifests list
 ```
 $ oc get packagemanifests
@@ -363,7 +367,7 @@ $ oc patch installplan install-xxx --type merge \
 --patch '{"spec": {"approved":  true}}'
 ```
 
-## cluster upgrades
+### cluster upgrades
 getting the cluster update status
 ```
 $ oc get clusterversion
@@ -404,7 +408,7 @@ get detailed information on the upgrade status
 $ oc describe clusterversion
 ```
 
-## deprecated apis
+### deprecated apis
 ```
 $ oc api-resources |grep "^NAME|<api name>"
 ```
