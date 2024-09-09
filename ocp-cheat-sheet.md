@@ -14,7 +14,8 @@ Openshift commands for day to day usage
 - [Quota and Resources](#quota-and-resources)
 - [Limit Ranges](#limit-ranges)
 - [Operators](#operators)
-
+- [Cluster upgrades](#cluster-upgrades)
+- [Deprecated APIs](#deprecated-apis)
 ## templates
 
 To process a template
@@ -362,7 +363,7 @@ $ oc patch installplan install-xxx --type merge \
 --patch '{"spec": {"approved":  true}}'
 ```
 
-## cluster updates
+## cluster upgrades
 getting the cluster update status
 ```
 $ oc get clusterversion
