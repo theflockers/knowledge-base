@@ -346,3 +346,74 @@ checking the operator install progress
 ```
 $ oc describe operator <name>
 ```
+get operator subscription info for _web-terminal_ operator
+```
+$ oc get sub -n openshift-operators web-terminal
+```
+
+get installplan for the operator
+```
+$ oc get installplan -n openshift-operators install-xxx
+```
+
+approve the installplan
+```
+$ oc patch installplan install-xxx --type merge \
+--patch '{"spec": {"approved":  true}}'
+```
+
+## cluster updates
+getting the cluster update status
+```
+$ oc get clusterversion
+```
+channels:
+```
+candidate-4.x
+fast-4.x
+stable-4.x
+```
+changing the channel in command line:
+```
+$ oc patch clusterversion version --type="merge" --patch '{"spec": {"channel": "stable-4.14"}}'
+```
+pausing machine healthcheck
+```
+$ oc annotate machinehealthcheck -n openshift-machine-api machine-api-termination-handler cluster.x-k8s.io/paused=""
+```
+unpausing
+```
+$ oc annotate machinehealthcheck -n openshift-machine-api machine-api-termination-handler cluster.x-k8s.io/paused-
+```
+to start the upgrade
+```
+$ oc adm upgrade
+```
+force upgrade to the latest version
+```
+$ oc adm upgrade --to-latest=true
+```
+upgrading for a specific version
+```
+$ oc adm upgrade --to=<version>
+```
+
+get detailed information on the upgrade status
+```
+$ oc describe clusterversion
+```
+
+## deprecated apis
+```
+$ oc api-resources |grep "^NAME|<api name>"
+```
+
+get api usage per version
+```
+oc get apirequestcounts | awk '{if(NF==4){print $0}}'
+```
+manual acknownledgement of an api upgrade
+```
+$ oc patch configma admin-acks -n openshift-config --type=merge \
+--patch '{"data": {"ack-4.13-kube-1.27-api-removals-in-4.14": "true"}}'
+```
